@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BoxKit — under-desk box · interactive explorer</title>
+<style>
+:root { --ink:#191b1e; --sub:#5b6169; --line:#e3e5e8; --card:#fafbfc; --acc:#0a6cff; --ok:#0a7d38; }
+* { box-sizing:border-box; margin:0; }
+body { font:15px/1.55 -apple-system,'Segoe UI',sans-serif; color:var(--ink); background:#fff; padding:30px 4vw 90px; }
+h1 { font-size:28px; letter-spacing:-.02em; }
+h2 { font-size:20px; margin:44px 0 14px; letter-spacing:-.01em; }
+.sub { color:var(--sub); margin:8px 0 20px; max-width:880px; }
+.pill { display:inline-block; background:#eef4ff; color:var(--acc); border-radius:20px; padding:2px 12px; font-size:12.5px; font-weight:600; margin:0 6px 6px 0; }
+.explorer { max-width:1020px; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--card); box-shadow:0 1px 8px rgba(0,0,0,.05); }
+.stage { position:relative; }
+.stage img { width:100%; display:block; aspect-ratio:1400/950; object-fit:cover; cursor:grab; user-select:none; -webkit-user-drag:none; }
+.stage .badge { position:absolute; left:14px; top:12px; background:rgba(25,27,30,.72); color:#fff; border-radius:8px; padding:3px 10px; font-size:12px; }
+.ctl { display:flex; flex-wrap:wrap; gap:8px; padding:12px 14px; border-top:1px solid var(--line); align-items:center; }
+.ctl button { border:1px solid var(--line); background:#fff; border-radius:9px; padding:6px 13px; font-size:13px; cursor:pointer; }
+.ctl button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+.ctl .sep { width:1px; height:22px; background:var(--line); margin:0 4px; }
+.ctl .grow { flex:1; }
+.ctl .hint { color:var(--sub); font-size:12px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 13px; }
+.chips span { color:var(--sub); font-size:12px; padding:5px 4px 0 0; }
+.chips button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:4px 11px; font-size:12.5px; cursor:pointer; }
+.chips button.on { background:#eef4ff; border-color:var(--acc); color:var(--acc); font-weight:600; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:16px; max-width:1300px; }
+.card { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--card); cursor:pointer; transition:box-shadow .15s; }
+.card:hover { box-shadow:0 3px 14px rgba(0,0,0,.10); }
+.card img { width:100%; display:block; aspect-ratio:1400/950; object-fit:cover; }
+.card .cap { padding:10px 14px 13px; font-size:13.5px; }
+.card .cap b { display:block; margin-bottom:3px; font-size:14px; }
+table { border-collapse:collapse; font-size:13.5px; margin-top:8px; }
+td,th { border:1px solid var(--line); padding:6px 12px; text-align:left; }
+th { background:var(--card); }
+.ok { color:var(--ok); font-weight:600; }
+ol.steps { margin:10px 0 0 18px; max-width:840px; }
+ol.steps li { margin-bottom:7px; }
+code { background:var(--card); border:1px solid var(--line); border-radius:5px; padding:0 5px; font-size:12.5px; }
+a { color:var(--acc); }
+.note { background:#f0f7f1; border:1px solid #bfdec7; border-radius:10px; padding:12px 16px; max-width:880px; margin-top:14px; font-size:13.5px; }
+</style>
+</head>
+<body>
+<h1>BoxKit <span style="color:var(--sub);font-weight:400;font-size:20px">· screw-mounted under-desk box</span></h1>
+<p class="sub"><span class="pill">v3.0 final</span><span class="pill">16 × 6 × 3-inch interior</span><span class="pill">8 parts · 200×200 bed · ~440 g</span>
+A clean fluted-front box that screws flat under a desk and swallows the power clutter: slim AC→USB-C charger +
+Mac mini M4 inside, ventilation on bottom + rear + both sides, cables in through a rear plug-pass notch that
+closes around them with sliding scalloped shutters, three tool-free removable reeded doors, four gusseted
+external screw ears.</p>
+
+<h2 style="margin-top:10px">Downloads</h2>
+<p class="sub" style="margin:4px 0 18px">
+<a href="files/boxkit_print_package.zip" download><b>⬇ 3D-print package</b></a> — 10 STLs incl. two ready print
+plates (32 KB) &nbsp;·&nbsp; <a href="files/deskbox_source.blend" download><b>⬇ Blender source</b></a> — fully
+parametric scene (148 KB, Blender 4+) &nbsp;·&nbsp; everything on this page is self-contained and shareable.</p>
+
+<div class="explorer">
+  <div class="stage">
+    <img id="v" src="renders/sbox/e_o02.png" alt="BoxKit explorer" draggable="false">
+    <div class="badge" id="badge">Orbit · drag to rotate</div>
+  </div>
+  <div class="ctl">
+    <button id="bOrbit" class="on">⟳ Orbit</button>
+    <button id="bXray">👁 X-ray (doors off)</button>
+    <button id="bPlay">▶ Auto-rotate</button>
+    <div class="sep"></div>
+    <div class="grow"></div>
+    <div class="hint">drag / ← → keys · click any card below to load it here</div>
+  </div>
+  <div class="chips" id="chips">
+    <span>Views:</span>
+    <button data-s="e_front">Front</button>
+    <button data-s="e_hero">Hero ¾</button>
+    <button data-s="e_low">Low</button>
+    <button data-s="e_rear">Rear</button>
+    <button data-s="e_bottom">Bottom</button>
+    <button data-s="e_service">Service</button>
+    <button data-s="e_open">Open</button>
+    <button data-s="e_strip">Power zone</button>
+    <button data-s="e_mini">Mac mini</button>
+    <button data-s="e_tunnel">Tunnel</button>
+    <button data-s="e_mount">Mount</button>
+    <button data-s="e_cap">End + port</button>
+    <button data-s="e_explode">Exploded</button>
+    <button data-s="e_ctx">Room</button>
+  </div>
+</div>
+
+<h2>Gallery</h2>
+<div class="grid" id="gallery">
+  <div class="card" data-s="e_hero"><img src="renders/sbox/e_hero.png"><div class="cap"><b>Hero</b>Fluted (reeded) door faces under the desk edge — reads as built-in furniture, not a printed box.</div></div>
+  <div class="card" data-s="e_front"><img src="renders/sbox/e_front.png"><div class="cap"><b>Front elevation</b>Three reeded doors, V-groove joints with white backers, 9mm flute rhythm across the band.</div></div>
+  <div class="card" data-s="e_service"><img src="renders/sbox/e_service.png"><div class="cap"><b>Tool-free service</b>Any door: lift 8mm, tilt, off. Two rigid J-hooks + bottom tab; no magnets, no snap-fits.</div></div>
+  <div class="card" data-s="e_open"><img src="renders/sbox/e_open.png"><div class="cap"><b>Doors off</b>Slim AC→USB-C charger left, Mac mini right, everything on the vented lattice floor.</div></div>
+  <div class="card" data-s="e_notch"><img src="renders/sbox/e_notch.png"><div class="cap"><b>Rear cable notch + closure</b>56×42mm pass-through (fits an AC plug head); two sliding scalloped shutters close around the installed cables.</div></div>
+  <div class="card" data-s="e_mini"><img src="renders/sbox/e_mini.png"><div class="cap"><b>Mac mini bay</b>127×127 mini over floor vents — its bottom-intake cooling path stays open.</div></div>
+  <div class="card" data-s="e_tunnel"><img src="renders/sbox/e_tunnel.png"><div class="cap"><b>Down the tunnel</b>Screw straps above, vent walls, segment joints — the machine-room view.</div></div>
+  <div class="card" data-s="e_mount"><img src="renders/sbox/e_mount.png"><div class="cap"><b>External screw ears</b>Four gusseted corner ears — hold the box up with one hand, drive four #8 screws with the other. No inside access needed.</div></div>
+  <div class="card" data-s="e_cap"><img src="renders/sbox/e_cap.png"><div class="cap"><b>End walls</b>Vent slot fields on both ends — four-sided airflow with the lattice floor and rear rows.</div></div>
+  <div class="card" data-s="e_rear"><img src="renders/sbox/e_rear.png"><div class="cap"><b>Rear</b>Four vent rows; this face lives 2mm from the wall — never seen, always breathing.</div></div>
+  <div class="card" data-s="e_bottom"><img src="renders/sbox/e_bottom.png"><div class="cap"><b>Bottom lattice</b>Dense frame + crossbars + triple spine — structured, airy, and the only face guests might glimpse.</div></div>
+  <div class="card" data-s="e_explode"><img src="renders/sbox/e_explode.png"><div class="cap"><b>The printed parts</b>3 tube segments (outer two with integral vented ends + ears) + 3 fluted doors + 2 closure sliders.</div></div>
+  <div class="card" data-s="e_hook"><img src="renders/sbox/e_hook.png"><div class="cap"><b>Door joints</b>Chamfered reveals; the top gap doubles as the door-hook lip line.</div></div>
+  <div class="card" data-s="e_ctx"><img src="renders/sbox/e_ctx.png"><div class="cap"><b>In the room</b>What you actually see from a chair: nothing but a clean shadow line.</div></div>
+</div>
+
+<h2>Parts & weight (measured in Blender)</h2>
+<table>
+<tr><th>Part</th><th>Qty</th><th>Weight (solid)</th><th>Print</th></tr>
+<tr><td>End segment — vented end, 2 screw ears</td><td>2</td><td>136 g ea</td><td>upright on end, no supports</td></tr>
+<tr><td>Center segment — rear notch + closure rails</td><td>1</td><td>87 g</td><td>upright on end, no supports</td></tr>
+<tr><td>Fluted door — tilt-hook</td><td>3</td><td>24 g ea</td><td>flat, face down</td></tr>
+<tr><td>Closure slider (scalloped)</td><td>2</td><td>2.5 g ea</td><td>flat</td></tr>
+</table>
+<p class="sub">System ≈ 435 g solid · every part ≤ 200×200 mm bed · two combined print plates included in the package
+(plate_a = 2 doors · plate_b = door + both sliders).</p>
+
+<h2>Print settings</h2>
+<table>
+<tr><th>Setting</th><th>Value</th></tr>
+<tr><td>Material</td><td>PLA (white matte recommended)</td></tr>
+<tr><td>Layer / walls / infill</td><td>0.2 mm · 3 perimeters · 15–20% gyroid</td></tr>
+<tr><td>Segments orientation</td><td>standing on the end face — all walls vertical, zero supports (ear gussets are 45° self-supporting)</td></tr>
+<tr><td>Doors / plates</td><td>face down — the flutes print against the bed, crisp</td></tr>
+<tr><td>Hardware</td><td>6× M3×8 + nuts (segment joints) · 4× #8×30 mm wood screws (desk)</td></tr>
+</table>
+
+<h2>Assembly</h2>
+<ol class="steps">
+<li>Print 3 segments upright + the two door plates (or 3 doors + 2 sliders individually) flat.</li>
+<li>Join segments on the bench: flange rings engage, 6× M3 through the joint bosses.</li>
+<li>Snap the two scalloped sliders into the rear-notch rails, slid fully open.</li>
+<li>Hold the box under the desk (it can sit a few inches off the wall — cable management lives behind it), mark the 4 ear holes, drill 2.5 mm pilots ~18 mm deep.</li>
+<li>Drive the 4 wood screws through the external ears. Done — no inside access needed.</li>
+<li>Pass power plugs head-first through the rear notch; set the charger and Mac mini on the lattice floor; connect everything.</li>
+<li>Slide the scalloped shutters together — they close around the installed cables.</li>
+<li>Hang the three fluted doors: hook top, drop, bottom tab seats. Lift-and-tilt to remove any time.</li>
+</ol>
+
+<div class="note"><b>Notes:</b> interior is 15.9 × 5.8 × 3.0 inches — sized for a slim AC→USB-C charger + a Mac mini M4,
+not for a full-size socket strip. Desk must take #8 wood screws (solid wood/ply). Fully parametric Blender source
+included — any dimension change regenerates every part.</div>
+
+<script>
+const N = 24;
+const orb = m => Array.from({length:N},(_,k)=>`renders/sbox/e_${m}${String(k).padStart(2,'0')}.png`);
+const SETS = { c: orb('o'), x: orb('x') };
+Object.values(SETS).flat().forEach(s=>{const i=new Image(); i.src=s;});
+const v = document.getElementById('v'), badge = document.getElementById('badge');
+const bOrbit=document.getElementById('bOrbit'), bXray=document.getElementById('bXray'), bPlay=document.getElementById('bPlay');
+let mode='orbit', set='c', fr=2, drag=null, playing=false, timer=null;
+function show(){
+  if(mode==='orbit'){ v.src = SETS[set][fr]; badge.textContent = (set==='x'?'X-ray orbit':'Orbit')+' · '+(fr*15)+'°'; }
+}
+function still(name, label){
+  mode='still'; stopPlay();
+  v.src = `renders/sbox/${name}.png`; badge.textContent = label || name.replace('e_','');
+  bOrbit.classList.remove('on');
+  document.querySelectorAll('.chips button').forEach(b=>b.classList.toggle('on', b.dataset.s===name));
+}
+function toOrbit(){ mode='orbit'; bOrbit.classList.add('on');
+  document.querySelectorAll('.chips button').forEach(b=>b.classList.remove('on')); show(); }
+bOrbit.onclick = toOrbit;
+bXray.onclick = ()=>{ set = set==='c' ? 'x' : 'c'; bXray.classList.toggle('on', set==='x'); if(mode!=='orbit') toOrbit(); else show(); };
+function stopPlay(){ playing=false; bPlay.classList.remove('on'); bPlay.textContent='▶ Auto-rotate'; clearInterval(timer); }
+bPlay.onclick = ()=>{ if(playing){ stopPlay(); return;} if(mode!=='orbit') toOrbit();
+  playing=true; bPlay.classList.add('on'); bPlay.textContent='⏸ Pause';
+  timer=setInterval(()=>{ fr=(fr+1)%N; show(); }, 140); };
+v.addEventListener('pointerdown',e=>{ if(mode==='orbit'){ drag={x:e.clientX,f:fr}; stopPlay(); v.style.cursor='grabbing'; }});
+window.addEventListener('pointermove',e=>{ if(drag){ fr=((drag.f+Math.round((e.clientX-drag.x)/25))%N+N)%N; show(); }});
+window.addEventListener('pointerup',()=>{ drag=null; v.style.cursor='grab'; });
+window.addEventListener('keydown',e=>{ if(mode!=='orbit')return;
+  if(e.key==='ArrowRight'){fr=(fr+1)%N;show();} if(e.key==='ArrowLeft'){fr=(fr+N-1)%N;show();}});
+document.getElementById('chips').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-s]'); if(b) still(b.dataset.s, b.textContent);});
+document.getElementById('gallery').addEventListener('click',e=>{
+  const c=e.target.closest('.card'); if(c){ still(c.dataset.s, c.querySelector('b').textContent);
+    window.scrollTo({top:0, behavior:'smooth'}); }});
+show();
+</script>
+</body>
+</html>
